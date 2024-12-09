@@ -44,7 +44,7 @@ module MyDeployment {
     instance radioChipSelectPin
     instance radioInterruptPin
     instance spiDriver
-    instance rfm69
+    instance radio
 
     # ----------------------------------------------------------------------
     # Pattern graph specifiers
@@ -78,12 +78,12 @@ module MyDeployment {
       comQueue.buffQueueSend -> framer.bufferIn
 
       framer.framedAllocate -> bufferManager.bufferGetCallee
-      framer.framedOut -> rfm69.comDataIn
+      framer.framedOut -> radio.comDataIn
       framer.bufferDeallocate -> fileDownlink.bufferReturn
 
-      rfm69.deallocate -> bufferManager.bufferSendIn
+      radio.deallocate -> bufferManager.bufferSendIn
 
-      rfm69.comStatus -> framer.comStatusIn
+      radio.comStatus -> framer.comStatusIn
       framer.comStatusOut -> comQueue.comStatusIn
 
     }
@@ -98,7 +98,7 @@ module MyDeployment {
 
       # Rate group 1 (100 ms)
       rateGroupDriver.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1.CycleIn
-      rateGroup1.RateGroupMemberOut[0] -> rfm69.run
+      rateGroup1.RateGroupMemberOut[0] -> radio.run
 
       # Rate group 2
       rateGroupDriver.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2.CycleIn
@@ -121,8 +121,8 @@ module MyDeployment {
 
     connections Uplink {
 
-      rfm69.allocate -> bufferManager.bufferGetCallee
-      rfm69.comDataOut -> deframer.framedIn
+      radio.allocate -> bufferManager.bufferGetCallee
+      radio.comDataOut -> deframer.framedIn
 
       deframer.framedDeallocate -> bufferManager.bufferSendIn
       deframer.comOut -> cmdDisp.seqCmdBuff
@@ -137,10 +137,10 @@ module MyDeployment {
 
     connections MyDeployment {
       # Add here connections to user-defined components
-      rfm69.radioReset -> radioResetPin.gpioWrite
-      rfm69.radioChipSelect -> radioChipSelectPin.gpioWrite
-      radioInterruptPin.gpioInterrupt -> rfm69.radioInterrupt
-      rfm69.spiReadWrite -> spiDriver.SpiReadWrite
+      radio.radioReset -> radioResetPin.gpioWrite
+      radio.radioChipSelect -> radioChipSelectPin.gpioWrite
+      radioInterruptPin.gpioInterrupt -> radio.radioInterrupt
+      radio.spiReadWrite -> spiDriver.SpiReadWrite
     }
 
   }

@@ -161,7 +161,8 @@ void setupTopology(const TopologyState& state) {
     radioInterruptPin.open("/dev/gpiochip0", 18, Drv::LinuxGpioDriver::GPIO_INTERRUPT_RISING_EDGE);
     radioInterruptPin.start(COMM_PRIORITY, Default::STACK_SIZE);
 
-    rfm69.config(true);
+    radio.config();
+    radio.setTxPower(20);
 }
 
 // Variables used for cycle simulation

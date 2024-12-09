@@ -124,7 +124,7 @@ void RFM69::radioInterrupt_handler(FwIndexType portNum, Os::RawTime& cycleStart)
     U8 irqflags2 = this->readRegister(RF69_REG_28_IRQFLAGS2);
     if (this->m_mode == RF69_Mode::Tx && (irqflags2 & RF69_IRQFLAGS2_PACKETSENT)) {
         // A transmitter message has been fully sent
-        setModeIdle();  // Clears FIFO
+        this->setModeIdle();  // Clears FIFO
         // Fw::Logger::log("Packet sent\n");
     }
 
@@ -180,12 +180,6 @@ void RFM69::run_handler(FwIndexType portNum, U32 context) {
 // ----------------------------------------------------------------------
 
 void RFM69::SET_TX_POWER_cmdHandler(FwOpcodeType opCode, U32 cmdSeq, I8 power) {
-    if (power < -18) {
-        power = -18;
-    } else if (power > 20) {
-        power = 20;
-    }
-
     this->setTxPower(power, this->m_isHighPowerModule);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
@@ -402,34 +396,35 @@ void RFM69::setEncryptionKey(U8* key) {
 }
 
 void RFM69::setTxPower(I8 power, bool isHighPowerModule) {
-    this->m_powerLevel = power;
     U8 palevel;
 
     if (isHighPowerModule) {
-        if (this->m_powerLevel < -2)
-            this->m_powerLevel = -2;  // RFM69HW only works down to -2.
-        if (this->m_powerLevel <= 13) {
+        if (power < -2)
+            power = -2;  // RFM69HW only works down to -2.
+        if (power <= 13) {
             // -2dBm to +13dBm
             // Need PA1 exclusivelly on RFM69HW
-            palevel = RF69_PALEVEL_PA1ON | ((this->m_powerLevel + 18) & RF69_PALEVEL_OUTPUTPOWER);
-        } else if (this->m_powerLevel >= 18) {
+            palevel = RF69_PALEVEL_PA1ON | ((power + 18) & RF69_PALEVEL_OUTPUTPOWER);
+        } else if (power >= 18) {
             // +18dBm to +20dBm
             // Need PA1+PA2
             // Also need PA boost settings change when tx is turned on and off, see setModeTx()
-            palevel = RF69_PALEVEL_PA1ON | RF69_PALEVEL_PA2ON | ((this->m_powerLevel + 11) & RF69_PALEVEL_OUTPUTPOWER);
+            palevel = RF69_PALEVEL_PA1ON | RF69_PALEVEL_PA2ON | ((power + 11) & RF69_PALEVEL_OUTPUTPOWER);
         } else {
             // +14dBm to +17dBm
             // Need PA1+PA2
-            palevel = RF69_PALEVEL_PA1ON | RF69_PALEVEL_PA2ON | ((this->m_powerLevel + 14) & RF69_PALEVEL_OUTPUTPOWER);
+            palevel = RF69_PALEVEL_PA1ON | RF69_PALEVEL_PA2ON | ((power + 14) & RF69_PALEVEL_OUTPUTPOWER);
         }
     } else {
-        if (this->m_powerLevel < -18)
-            this->m_powerLevel = -18;
-        if (this->m_powerLevel > 13)
-            this->m_powerLevel = 13;  // limit for RFM69W
-        palevel = RF69_PALEVEL_PA0ON | ((this->m_powerLevel + 18) & RF69_PALEVEL_OUTPUTPOWER);
+        if (power < -18)
+            power = -18;
+        if (power > 13)
+            power = 13;  // limit for RFM69W
+        palevel = RF69_PALEVEL_PA0ON | ((power + 18) & RF69_PALEVEL_OUTPUTPOWER);
     }
     this->writeRegister(RF69_REG_11_PALEVEL, palevel);
+
+    this->m_powerLevel = power;
 }
 
 U8 RFM69::readRegister(U8 address, bool readMask) {

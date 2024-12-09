@@ -87,7 +87,7 @@ module MyDeployment {
     stack size Default.STACK_SIZE \
     priority 96
 
-  instance rfm69: Radios.RFM69 base id 0x1000 \
+  instance radio: Radios.RFM95 base id 0x1000 \
     queue size Default.QUEUE_SIZE \
     stack size Default.STACK_SIZE \
     priority 96
